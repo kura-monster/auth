@@ -1,4 +1,4 @@
-# Rula Auth Gateway
+# Rula Auth
 
 ## セットアップ
 
