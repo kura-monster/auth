@@ -1,4 +1,4 @@
-# Rula Auth
+# Auth
 
 ## セットアップ
 
