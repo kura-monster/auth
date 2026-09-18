@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Verification</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@200;300;400&family=Geist:wght@200;300;400;500&display=swap');
+
+    :root {
+      --bg: #030303;
+      --text: #e4e4e7;
+      --text-muted: #52525b;
+      --success: #10b981;
+      --error: #ef4444;
+      --font-sans: 'Geist', sans-serif;
+      --font-mono: 'Geist Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-left-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .loading-step-details {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .status-lbl {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .status-lbl.success { color: var(--success); }
+    .status-lbl.error { color: var(--error); }
+
+    h1 {
+      font-size: 15px;
+      font-weight: 400;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .identity img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #27272a;
+    }
+
+    .identity-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .log-box {
+      border: 1px solid #18181b;
+      background: #09090b;
+      padding: 16px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .log-key {
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .log-val {
+      color: var(--text);
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .log-val.success-highlight {
+      color: var(--success);
+    }
+
+    .error-detail-box {
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      background: rgba(239, 68, 68, 0.02);
+      padding: 16px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      line-height: 1.5;
+      color: #fca5a5;
+    }
+
+    .error-code {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+
+    .btn-retry {
+      display: inline-flex;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: #ffffff;
+      background: transparent;
+      border: 1px solid #27272a;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      cursor: pointer;
+      width: fit-content;
+      transition: border-color 0.2s;
+    }
+
+    .btn-retry:hover {
+      border-color: #ffffff;
+    }
+
+    .sponsorship {
+      border-top: 1px solid #18181b;
+      padding-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .sponsor-title {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .sponsor-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .sponsor-desc span {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- LOADING SCREEN -->
+    <div class="screen active" id="screen-loading">
+      <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <span class="loading-text" id="loading-state-text">checking...</span>
+      </div>
+      <div class="loading-step-details" id="loading-details">authenticating</div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div class="screen" id="screen-success">
+      <div class="status-lbl success">success</div>
+      <h1>連携が完了しました。</h1>
+
+      <div class="identity">
+        <img src="<%= avatarUrl %>" alt="" referrerpolicy="no-referrer">
+        <span class="identity-name"><%= username %></span>
+      </div>
+
+      <div class="log-box">
+        <div class="log-row">
+          <span class="log-key">ASSIGNED</span>
+          <span class="log-val success-highlight"><%= roleName %></span>
+        </div>
+        <div class="log-row">
+          <span class="log-key">GATEWAY</span>
+          <span class="log-val">PASSED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR SCREEN -->
+    <div class="screen" id="screen-error">
+      <div class="status-lbl error">failed</div>
+      <h1>連携できませんでした。</h1>
+
+      <div class="error-detail-box">
+        <%= errorMessage %>
+      </div>
+
+      <div class="error-code" id="error-code"></div>
+
+      <a class="btn-retry" href="/api/auth/start">再試行</a>
+    </div>
+
+    <!-- COMMON SPONSORSHIP -->
+    <div class="sponsorship">
+      <div class="sponsor-title">infrastructure</div>
+      <p class="sponsor-desc">このシステムは <span>Kura</span> のドメイン提供により運用されています。</p>
+    </div>
+
+  </div>
+
+  <script type="application/json" id="bootstrap-data" nonce="<%= nonce %>"><%json bootstrap %></script>
+
+  <script nonce="<%= nonce %>">
+  (function () {
+    'use strict';
+
+    var BOOT = JSON.parse(document.getElementById('bootstrap-data').textContent);
+
+    var screenLoading = document.getElementById('screen-loading');
+    var screenSuccess = document.getElementById('screen-success');
+    var screenError = document.getElementById('screen-error');
+    var stateText = document.getElementById('loading-state-text');
+    var detailsText = document.getElementById('loading-details');
+    var errorCode = document.getElementById('error-code');
+
+    var STEP_LABELS = {
+      network: ['checking network...', 'scanning proxy & vpn'],
+      challenge: ['evaluating challenge...', 'verifying proof of work'],
+      account: ['resolving account...', 'checking membership'],
+      rate: ['checking capacity...', 'evaluating request volume'],
+      state: ['validating request...', 'checking integrity'],
+      session: ['restoring session...', 'checking session state'],
+      system: ['checking...', 'contacting service']
+    };
+
+    function delay(ms) {
+      return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    }
+
+    function showFinalScreen(type) {
+      screenLoading.classList.remove('active');
+      (type === 'success' ? screenSuccess : screenError).classList.add('active');
+    }
+
+    async function run() {
+      if (!BOOT.success) {
+        var labels = STEP_LABELS[BOOT.failStep] || STEP_LABELS.system;
+        stateText.textContent = labels[0];
+        detailsText.textContent = labels[1];
+        if (BOOT.code) errorCode.textContent = 'REF: ' + BOOT.code;
+        await delay(900);
+        showFinalScreen('error');
+        return;
+      }
+
+      await delay(500);
+      stateText.textContent = 'checking network...';
+      detailsText.textContent = 'scanning proxy & vpn';
+      await delay(700);
+
+      stateText.textContent = 'resolving permissions...';
+      detailsText.textContent = 'checking role assignment';
+      await delay(700);
+
+      showFinalScreen('success');
+    }
+
+    run();
+  })();
+  </script>
+</body>
+</html>

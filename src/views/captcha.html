@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Verification</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@200;300;400&family=Geist:wght@200;300;400;500&display=swap');
+
+    :root {
+      --bg: #030303;
+      --text: #e4e4e7;
+      --text-muted: #52525b;
+      --error: #ef4444;
+      --font-sans: 'Geist', sans-serif;
+      --font-mono: 'Geist Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 28px;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 400;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .hold-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: 16px 0;
+    }
+
+    .hold-area {
+      position: relative;
+      width: 176px;
+      height: 176px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0);
+      inset: -16px;
+      pointer-events: none;
+      transition: border-color 0.4s;
+    }
+    .pulse-ring-2 {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0);
+      inset: -6px;
+      pointer-events: none;
+      transition: border-color 0.4s;
+    }
+    .holding .pulse-ring   { border-color: rgba(255,255,255,0.07); animation: pulse 1.6s ease-out infinite; }
+    .holding .pulse-ring-2 { border-color: rgba(255,255,255,0.05); animation: pulse 1.6s ease-out 0.55s infinite; }
+
+    @keyframes pulse {
+      0%   { transform: scale(0.94); opacity: 1; }
+      100% { transform: scale(1.18); opacity: 0; }
+    }
+
+    .rings-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .ring-static {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 1;
+    }
+
+    .ring-dash-cw {
+      fill: none;
+      stroke: rgba(255,255,255,0);
+      stroke-width: 1;
+      stroke-dasharray: 5 10;
+      transition: stroke 0.4s;
+      transform-origin: 88px 88px;
+    }
+    .holding .ring-dash-cw {
+      stroke: rgba(255,255,255,0.28);
+      animation: spin-cw 5s linear infinite;
+    }
+
+    .ring-dash-ccw {
+      fill: none;
+      stroke: rgba(255,255,255,0);
+      stroke-width: 1;
+      stroke-dasharray: 3 14;
+      transition: stroke 0.4s;
+      transform-origin: 88px 88px;
+    }
+    .holding .ring-dash-ccw {
+      stroke: rgba(255,255,255,0.14);
+      animation: spin-ccw 3.5s linear infinite;
+    }
+
+    @keyframes spin-cw  { to { transform: rotate(360deg); } }
+    @keyframes spin-ccw { to { transform: rotate(-360deg); } }
+
+    .progress-arc {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      transform-origin: 88px 88px;
+      rotate: -90deg;
+      transition: filter 0.4s;
+    }
+    .holding .progress-arc {
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.55)) drop-shadow(0 0 12px rgba(255,255,255,0.2));
+    }
+
+    .hold-btn {
+      position: relative;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      border: 1px solid #1c1c1f;
+      background: #080808;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.3s, box-shadow 0.4s, opacity 0.3s;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .hold-btn:disabled { cursor: progress; opacity: 0.55; }
+    .hold-btn.holding {
+      border-color: #2c2c30;
+      box-shadow: 0 0 28px rgba(255,255,255,0.04), 0 0 56px rgba(255,255,255,0.015), inset 0 0 20px rgba(255,255,255,0.02);
+    }
+    .hold-btn.done {
+      border-color: #404044;
+      box-shadow: 0 0 40px rgba(255,255,255,0.09);
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.55) 60%, transparent 100%);
+      opacity: 0;
+      pointer-events: none;
+      border-radius: 1px;
+      transition: opacity 0.3s;
+    }
+    .holding .scan-line {
+      opacity: 1;
+      animation: scan 1.1s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+    @keyframes scan {
+      0%   { top: 12px; }
+      50%  { top: calc(100% - 12px); }
+      100% { top: 12px; }
+    }
+
+    .hand-icon {
+      color: #363639;
+      transition: color 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    .hold-btn.holding .hand-icon { color: #909094; transform: translateY(-1px); }
+    .hold-btn.done    .hand-icon { color: #e4e4e7; }
+
+    .status-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-height: 36px;
+    }
+
+    .hold-hint {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+    .active-state .hold-hint { color: #71717a; }
+
+    .hex-stream {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: #27272a;
+      letter-spacing: 0.04em;
+      height: 13px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+    }
+    .active-state .hex-stream { opacity: 1; }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 1px;
+      background: #18181b;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #fff;
+      border-radius: 1px;
+      transition: width 0.05s linear, box-shadow 0.4s;
+    }
+    .active-state .progress-bar-fill {
+      box-shadow: 0 0 6px rgba(255,255,255,0.5);
+    }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn {
+      flex: 1;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      padding: 11px;
+      border-radius: 4px;
+      border: 1px solid #27272a;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s, opacity 0.2s;
+    }
+    .btn:hover { border-color: #52525b; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.primary { background: #fff; color: #000; border-color: #fff; }
+    .btn.primary:hover { background: #e4e4e7; border-color: #e4e4e7; }
+    .btn.primary:disabled { background: #3f3f46; color: #a1a1aa; border-color: #3f3f46; }
+
+    .turnstile-slot { display: flex; justify-content: center; min-height: 0; }
+    .turnstile-slot:not(:empty) { min-height: 70px; }
+
+    .inline-error {
+      font-size: 11px;
+      color: var(--error);
+      line-height: 1.6;
+      min-height: 16px;
+    }
+
+    .sponsorship {
+      border-top: 1px solid #18181b;
+      padding-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sponsor-title {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .sponsor-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .sponsor-desc span { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HOLD SCREEN -->
+    <div class="screen active" id="screen-hold">
+      <div class="label">verification</div>
+      <h1>長押しして続行してください。</h1>
+      <p>ボタンを長押しして、ロボットでないことを確認します。</p>
+
+      <div class="hold-wrapper">
+        <div class="hold-area" id="holdArea">
+          <div class="pulse-ring"></div>
+          <div class="pulse-ring-2"></div>
+
+          <svg class="rings-svg" viewBox="0 0 176 176">
+            <circle class="ring-static"   cx="88" cy="88" r="84"/>
+            <circle class="ring-dash-cw"  cx="88" cy="88" r="84"/>
+            <circle class="ring-dash-ccw" cx="88" cy="88" r="71"/>
+            <circle id="progressArc" class="progress-arc" cx="88" cy="88" r="78"/>
+          </svg>
+
+          <button class="hold-btn" id="holdBtn" type="button" aria-label="長押しして認証">
+            <div class="scan-line"></div>
+            <svg class="hand-icon" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 11V6.5a2.5 2.5 0 0 0-5 0V12m0 0V6.5a2.5 2.5 0 0 0-5 0V12m0 0V8.5a2.5 2.5 0 0 0-5 0V16a6 6 0 0 0 6 6h2a6 6 0 0 0 6-6v-1.5a2.5 2.5 0 0 0-5 0"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="status-area" id="statusArea">
+          <span class="hold-hint" id="holdHint">initializing...</span>
+          <span class="hex-stream" id="hexStream"></span>
+        </div>
+
+        <div class="progress-bar-track" style="width:176px">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM SCREEN -->
+    <div class="screen" id="screen-confirm">
+      <div class="label">confirmation</div>
+      <h1>認証しますか？</h1>
+      <p>Discordアカウントとの連携を続行します。</p>
+
+      <div class="turnstile-slot" id="turnstileSlot"></div>
+      <div class="inline-error" id="inlineError"></div>
+
+      <div class="btn-row">
+        <button type="button" class="btn" id="cancelBtn">いいえ</button>
+        <button type="button" class="btn primary" id="submitBtn">はい</button>
+      </div>
+    </div>
+
+    <div class="sponsorship">
+      <div class="sponsor-title">infrastructure</div>
+      <p class="sponsor-desc">このシステムは <span>Kura</span> のドメイン提供により運用されています。</p>
+    </div>
+
+  </div>
+
+  <script type="application/json" id="bootstrap-data" nonce="<%= nonce %>"><%json bootstrap %></script>
+
+  <script nonce="<%= nonce %>">
+  (function () {
+    'use strict';
+
+    var BOOT = JSON.parse(document.getElementById('bootstrap-data').textContent);
+
+    // ---------------------------------------------------------------------
+    // SHA-256 (Proof-of-Work 用)
+    //
+    // crypto.subtle は 1 回ごとの呼び出し負荷が大きく、数十万回の総当たりには
+    // 使えないため、単一ブロック専用の同期実装を置いている。
+    // ---------------------------------------------------------------------
+    var K = new Uint32Array([
+      0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+    ]);
+
+    var W = new Uint32Array(64);
+    var block = new Uint8Array(64);
+    var view = new DataView(block.buffer);
+
+    /** 64 バイト 1 ブロックを圧縮し、ダイジェスト先頭 32bit だけ返す。 */
+    function compressFirstWord() {
+      var i;
+      for (i = 0; i < 16; i++) W[i] = view.getUint32(i * 4, false);
+      for (i = 16; i < 64; i++) {
+        var w15 = W[i - 15], w2 = W[i - 2];
+        var s0 = ((w15 >>> 7) | (w15 << 25)) ^ ((w15 >>> 18) | (w15 << 14)) ^ (w15 >>> 3);
+        var s1 = ((w2 >>> 17) | (w2 << 15)) ^ ((w2 >>> 19) | (w2 << 13)) ^ (w2 >>> 10);
+        W[i] = (W[i - 16] + s0 + W[i - 7] + s1) | 0;
+      }
+
+      var a = 0x6a09e667, b = 0xbb67ae85, c = 0x3c6ef372, d = 0xa54ff53a;
+      var e = 0x510e527f, f = 0x9b05688c, g = 0x1f83d9ab, h = 0x5be0cd19;
+
+      for (i = 0; i < 64; i++) {
+        var S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        var ch = (e & f) ^ (~e & g);
+        var t1 = (h + S1 + ch + K[i] + W[i]) | 0;
+        var S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        var maj = (a & b) ^ (a & c) ^ (b & c);
+        var t2 = (S0 + maj) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0;
+        d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      return (0x6a09e667 + a) >>> 0;
+    }
+
+    var prefixLen = 0;
+    (function initPrefix() {
+      var prefix = BOOT.seed + ':';
+      for (var i = 0; i < prefix.length; i++) block[i] = prefix.charCodeAt(i) & 0xff;
+      prefixLen = prefix.length;
+    })();
+
+    function hashNonce(nonceStr) {
+      var len = prefixLen;
+      for (var i = 0; i < nonceStr.length; i++) block[len++] = nonceStr.charCodeAt(i);
+      block[len] = 0x80;
+      for (var j = len + 1; j < 56; j++) block[j] = 0;
+      view.setUint32(56, 0, false);
+      view.setUint32(60, len * 8, false);
+      return compressFirstWord();
+    }
+
+    // ---------------------------------------------------------------------
+    // PoW 実行 (UI を固めないよう小分けに回す)
+    // ---------------------------------------------------------------------
+    var BATCH = 4096;
+    var powState = { done: false, nonce: null, attempts: 0, startedAt: 0 };
+    var powWaiters = [];
+    var shift = 32 - BOOT.bits;
+
+    function solvePow() {
+      powState.startedAt = performance.now();
+      var nonce = Math.floor(Math.random() * 1e9);
+
+      function step() {
+        for (var i = 0; i < BATCH; i++) {
+          if ((hashNonce(String(nonce)) >>> shift) === 0) {
+            powState.done = true;
+            powState.nonce = String(nonce);
+            powState.attempts += i + 1;
+            powWaiters.forEach(function (fn) { fn(); });
+            powWaiters = [];
+            return;
+          }
+          nonce++;
+        }
+        powState.attempts += BATCH;
+        setTimeout(step, 0);
+      }
+
+      setTimeout(step, 0);
+    }
+
+    function whenPowReady(fn) {
+      if (powState.done) fn();
+      else powWaiters.push(fn);
+    }
+
+    // ---------------------------------------------------------------------
+    // 操作シグナルの収集
+    // ---------------------------------------------------------------------
+    var telemetry = { pointerEvents: 0, frameDeltas: [] };
+
+    ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(function (type) {
+      document.addEventListener(type, function () {
+        if (telemetry.pointerEvents < 10000) telemetry.pointerEvents++;
+      }, { passive: true });
+    });
+
+    function frameJitter() {
+      var deltas = telemetry.frameDeltas;
+      if (deltas.length < 4) return 0;
+      var mean = deltas.reduce(function (a, b) { return a + b; }, 0) / deltas.length;
+      var variance = deltas.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / deltas.length;
+      return Math.sqrt(variance);
+    }
+
+    function buildSignals(holdMs) {
+      return {
+        holdMs: Math.round(holdMs),
+        pointerEvents: telemetry.pointerEvents,
+        frameJitter: Number(frameJitter().toFixed(3)),
+        screen: String(screen.width) + 'x' + String(screen.height),
+        tz: (Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || '',
+        webdriver: navigator.webdriver === true,
+        powAttempts: powState.attempts,
+        powMs: Math.round(performance.now() - powState.startedAt)
+      };
+    }
+
+    // ---------------------------------------------------------------------
+    // 長押し UI
+    // ---------------------------------------------------------------------
+    var holdBtn = document.getElementById('holdBtn');
+    var holdArea = document.getElementById('holdArea');
+    var statusArea = document.getElementById('statusArea');
+    var progressArc = document.getElementById('progressArc');
+    var progressBar = document.getElementById('progressBar');
+    var holdHint = document.getElementById('holdHint');
+    var hexStream = document.getElementById('hexStream');
+    var screenHold = document.getElementById('screen-hold');
+    var screenConfirm = document.getElementById('screen-confirm');
+    var cancelBtn = document.getElementById('cancelBtn');
+    var submitBtn = document.getElementById('submitBtn');
+    var inlineError = document.getElementById('inlineError');
+
+    var HOLD_MS = Math.max(2500, BOOT.minHoldMs + 400);
+    var R = 78;
+    var CIRC = 2 * Math.PI * R;
+
+    progressArc.style.strokeDasharray = CIRC;
+    progressArc.style.strokeDashoffset = CIRC;
+
+    var holdStart = null;
+    var rafId = null;
+    var hexInterval = null;
+    var lastFrameTs = 0;
+    var measuredHoldMs = 0;
+
+    var HEX = '0123456789abcdef';
+    function randHex(n) {
+      var s = '';
+      for (var i = 0; i < n; i++) s += HEX[Math.random() * 16 | 0];
+      return s;
+    }
+
+    function setProgress(r) {
+      progressArc.style.strokeDashoffset = CIRC * (1 - r);
+      progressBar.style.width = (r * 100) + '%';
+    }
+
+    function startHold() {
+      if (holdStart !== null || holdBtn.disabled) return;
+      holdStart = performance.now();
+      lastFrameTs = holdStart;
+      holdBtn.classList.add('holding');
+      holdArea.classList.add('holding');
+      statusArea.classList.add('active-state');
+      holdHint.textContent = 'verifying...';
+      hexInterval = setInterval(function () { hexStream.textContent = randHex(32); }, 70);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function tick(now) {
+      if (holdStart === null) return;
+      // rAF 間隔のばらつきを記録する。実ブラウザでは必ず揺らぐ。
+      if (lastFrameTs) {
+        var delta = now - lastFrameTs;
+        if (telemetry.frameDeltas.length < 400) telemetry.frameDeltas.push(delta);
+      }
+      lastFrameTs = now;
+
+      var ratio = Math.min((now - holdStart) / HOLD_MS, 1);
+      setProgress(ratio);
+      if (ratio >= 1) completeHold(now);
+      else rafId = requestAnimationFrame(tick);
+    }
+
+    function releaseHold() {
+      if (holdStart === null) return;
+      holdStart = null;
+      cancelAnimationFrame(rafId);
+      clearInterval(hexInterval);
+      holdBtn.classList.remove('holding');
+      holdArea.classList.remove('holding');
+      statusArea.classList.remove('active-state');
+      holdHint.textContent = 'press and hold';
+      hexStream.textContent = '';
+      setProgress(0);
+    }
+
+    function completeHold(now) {
+      measuredHoldMs = now - holdStart;
+      holdStart = null;
+      cancelAnimationFrame(rafId);
+      clearInterval(hexInterval);
+      holdBtn.classList.remove('holding');
+      holdBtn.classList.add('done');
+      holdArea.classList.remove('holding');
+      statusArea.classList.remove('active-state');
+      hexStream.textContent = '';
+      setProgress(1);
+
+      holdHint.textContent = 'finalizing...';
+      // PoW が終わるまで次に進めない
+      whenPowReady(function () {
+        setTimeout(function () {
+          screenHold.classList.remove('active');
+          screenConfirm.classList.add('active');
+        }, 320);
+      });
+    }
+
+    holdBtn.addEventListener('mousedown', function (e) { e.preventDefault(); startHold(); });
+    document.addEventListener('mouseup', releaseHold);
+    document.addEventListener('mouseleave', releaseHold);
+    holdBtn.addEventListener('touchstart', function (e) { e.preventDefault(); startHold(); }, { passive: false });
+    document.addEventListener('touchend', releaseHold);
+    document.addEventListener('touchcancel', releaseHold);
+
+    cancelBtn.addEventListener('click', function () {
+      screenConfirm.classList.remove('active');
+      holdBtn.classList.remove('done');
+      setProgress(0);
+      holdHint.textContent = 'press and hold';
+      inlineError.textContent = '';
+      screenHold.classList.add('active');
+    });
+
+    // ---------------------------------------------------------------------
+    // Turnstile
+    // ---------------------------------------------------------------------
+    var turnstileToken = '';
+
+    if (BOOT.turnstileSiteKey) {
+      window.__onTurnstileLoad = function () {
+        window.turnstile.render('#turnstileSlot', {
+          sitekey: BOOT.turnstileSiteKey,
+          theme: 'dark',
+          callback: function (token) { turnstileToken = token; inlineError.textContent = ''; },
+          'expired-callback': function () { turnstileToken = ''; },
+          'error-callback': function () { turnstileToken = ''; }
+        });
+      };
+      var ts = document.createElement('script');
+      ts.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__onTurnstileLoad&render=explicit';
+      ts.async = true;
+      ts.defer = true;
+      document.head.appendChild(ts);
+    }
+
+    // ---------------------------------------------------------------------
+    // 送信
+    // ---------------------------------------------------------------------
+    var submitting = false;
+
+    submitBtn.addEventListener('click', function () {
+      if (submitting) return;
+
+      if (BOOT.turnstileSiteKey && !turnstileToken) {
+        inlineError.textContent = '上のチェックを完了してください。';
+        return;
+      }
+      if (!powState.done) {
+        inlineError.textContent = '検証を処理中です。数秒お待ちください。';
+        return;
+      }
+
+      submitting = true;
+      submitBtn.disabled = true;
+      cancelBtn.disabled = true;
+      submitBtn.textContent = '送信中...';
+      inlineError.textContent = '';
+
+      fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          sessionId: BOOT.sessionId,
+          challenge: BOOT.challenge,
+          powNonce: powState.nonce,
+          turnstileToken: turnstileToken,
+          signals: buildSignals(measuredHoldMs)
+        })
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; });
+      }).then(function (data) {
+        if (data && data.redirect) {
+          window.location.replace(data.redirect);
+          return;
+        }
+        throw new Error('unexpected response');
+      }).catch(function () {
+        submitting = false;
+        submitBtn.disabled = false;
+        cancelBtn.disabled = false;
+        submitBtn.textContent = 'はい';
+        inlineError.textContent = '通信に失敗しました。ネットワークを確認して、もう一度お試しください。';
+        if (BOOT.turnstileSiteKey && window.turnstile) {
+          try { window.turnstile.reset(); } catch (e) { /* 再描画できなくても送信自体は再試行できる */ }
+        }
+        turnstileToken = '';
+      });
+    });
+
+    // ---------------------------------------------------------------------
+    // 起動
+    // ---------------------------------------------------------------------
+    holdBtn.disabled = true;
+    solvePow();
+
+    // PoW の初回バッチが回り始めてから操作を受け付ける
+    setTimeout(function () {
+      holdBtn.disabled = false;
+      holdHint.textContent = 'press and hold';
+    }, 150);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "discord-auth-bot",
+  "version": "2.0.0",
+  "description": "Hardened Discord OAuth2 authentication gateway with proof-of-work challenge, multi-source VPN detection, and layered abuse control",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "register": "node -e \"require('dotenv').config();require('./register').registerCommands(process.env.CLIENT_ID,process.env.DISCORD_TOKEN,process.env.GUILD_ID)\"",
+    "secret": "node -e \"console.log(require('crypto').randomBytes(48).toString('base64url'))\"",
+    "test": "node test/security.test.js && node test/integration.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ipaddr.js": "^2.2.0"
+  }
+}
